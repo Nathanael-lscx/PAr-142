@@ -4,6 +4,7 @@
 
 use std::collections::HashMap;
 use crate::decking::Deck;
+use crate::decking::Card;
 
 #[derive(PartialEq, Hash, Clone, Copy, Debug)]
 pub enum ActionSpace {
@@ -16,16 +17,22 @@ pub enum ActionSpace {
 }
 impl Eq for ActionSpace {}
 
+#[derive(PartialEq, Eq, Hash, Debug, Clone)]
+pub struct InformationSet {
+    card: Card,
+    actions_history: Vec<ActionSpace>,
+}
+
 #[derive(Debug)]
 pub struct Node {
     // pub parent: Option<Box<Node>>,
-    is_chance: bool,
-    to_move: u8,
+    //is_chance: bool,
+    pub to_move: u8,
     pub cards: Deck,
 
     pub actions_history: Vec<ActionSpace>,
     pub actions: Vec<ActionSpace>,
-    children: HashMap<ActionSpace, Node>,
+    pub children: HashMap<ActionSpace, Node>,
 }
 
 impl Node {
@@ -40,7 +47,7 @@ impl Node {
             if (actions_hist.len() == 0) && a == ActionSpace::BET {
                 vec![ActionSpace::FOLD, ActionSpace::CALL]
             } else if (actions_hist.len() == 0) && a == ActionSpace::CHECK {
-                vec![ActionSpace::BET]
+                vec![ActionSpace::CHECK, ActionSpace::BET]
             } else if (actions_hist.last().unwrap() == &ActionSpace::CHECK) && a == ActionSpace::BET {
                 vec![ActionSpace::FOLD, ActionSpace::CALL]
             } else {
@@ -65,12 +72,29 @@ impl Node {
         
         Node {
             // parent: parent,
-            is_chance: is_chance,
+            //is_chance: is_chance,
             to_move: to_move,
             cards: cards,
             actions_history: actions_history,
             actions: actions,
             children: children,
+        }
+    }
+
+    pub fn is_terminal(&self) -> bool {
+        self.actions.is_empty()
+    }
+
+    pub fn information_set(&self) -> InformationSet {
+        let card: Card;
+        if self.to_move == 0 {
+            card = self.cards.d[0];
+        } else {
+            card = self.cards.d[1];
+        }
+        InformationSet {
+            card: card,
+            actions_history: self.actions_history.clone(),
         }
     }
         
@@ -86,13 +110,13 @@ impl Node {
                 if self.cards.d[0].val > self.cards.d[1].val {
                     vec![1, -1]
                 } else {
-                    vec![1, -1]
+                    vec![-1, 1]
                 }
             } else if self.actions_history.last().unwrap()==&ActionSpace::CALL {
                 if self.cards.d[0].val > self.cards.d[1].val {
                     vec![2, -2]
                 } else {
-                    vec![2, -2]
+                    vec![-2, 2]
                 }
             } else {
                 Vec::new()

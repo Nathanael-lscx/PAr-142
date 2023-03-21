@@ -45,11 +45,11 @@ impl Deck{
 
 
 // Structure de la carte
-#[derive(Copy, Clone, Debug)]
+#[derive(Hash, PartialEq, Copy, Clone, Debug)]
 pub struct Card{
     pub val: u8,
 }
-
+impl Eq for Card {}
 
 // Création de la carte et de ses fonctions d'affichage
 impl Card{
