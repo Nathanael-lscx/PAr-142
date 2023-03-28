@@ -12,32 +12,12 @@ pub struct CounterfactualRegretMinimization {
 }
 
 impl CounterfactualRegretMinimization {
-    pub fn new(root: &Node, chance_sampling: bool) -> Self {
+    pub fn new(chance_sampling: bool) -> Self {
         //Initialisation des regrets et des stratégies
-        let mut regret_sum = HashMap::new();
-        let mut strategy_sum = HashMap::new();
-        let mut strategy = HashMap::new();
+        let regret_sum = HashMap::new();
+        let strategy_sum = HashMap::new();
+        let strategy = HashMap::new();
         let nash = HashMap::new();
-
-        fn init_node_map(node: &Node, map: &mut HashMap<InformationSet, HashMap<ActionSpace, f32>>, mean: bool) {
-            let mut hash_map = HashMap::new();
-            for a in node.actions.clone() {
-                if mean {
-                    hash_map.insert(a, 1f32 / node.actions.len() as f32);
-                } else {
-                    hash_map.insert(a, 0f32);
-                }
-            }
-            map.insert(node.information_set(), hash_map.clone());
-            map.insert(node.information_set(), hash_map);
-            for c in node.children.values() {
-                init_node_map(c, map, mean);
-            }
-        }
-
-        init_node_map(&root, &mut regret_sum, false);
-        init_node_map(&root, &mut strategy_sum, false);
-        init_node_map(&root, &mut strategy, true);
 
         CounterfactualRegretMinimization {
             // root: root,
@@ -57,24 +37,26 @@ impl CounterfactualRegretMinimization {
             }
         }
         
-        for (action, prob) in self.strategy.get_mut(&inf_set).unwrap().iter_mut(){
+        for action in self.regret_sum[&inf_set].keys() {
             if sum == 0f32 {
-                *prob = 1f32 / self.regret_sum[&inf_set].len() as f32;
+                let prob = 1f32 / self.regret_sum[&inf_set].len() as f32;
+                self.strategy.entry(inf_set.clone()).or_insert(HashMap::new()).insert(action.clone(), prob);
             }
             else {
                 let sum_of_regret_for_action = self.regret_sum[&inf_set][action];
-                *prob = if sum_of_regret_for_action > 0f32 {sum_of_regret_for_action / sum} else {0f32};
+                let prob = if sum_of_regret_for_action > 0f32 {sum_of_regret_for_action / sum} else {0f32};
+                self.strategy.entry(inf_set.clone()).or_insert(HashMap::new()).insert(action.clone(), prob);
             }
         }
         
     }
 
     pub fn update_strategy_sum(&mut self, inf_set: InformationSet, action: ActionSpace, prob: f32) -> () {
-        *self.strategy_sum.get_mut(&inf_set).unwrap().entry(action).or_insert(0f32) += prob;
+        *self.strategy_sum.entry(inf_set).or_insert(HashMap::new()).entry(action).or_insert(0f32) += prob;
     }
 
     pub fn update_regret_sum(&mut self, inf_set: InformationSet, action: ActionSpace, regret: f32) -> () {
-        *self.regret_sum.get_mut(&inf_set).unwrap().entry(action).or_insert(0f32) += regret;
+        *self.regret_sum.entry(inf_set).or_insert(HashMap::new()).entry(action).or_insert(0f32) += regret;
     }
 
     pub fn compute_nash(&mut self) -> () {
@@ -116,10 +98,9 @@ impl CounterfactualRegretMinimization {
                 let mut new_reach_probs = reach_probs.clone();
                 for (i, x) in new_reach_probs.iter_mut().enumerate() {
                     if i != node.to_move as usize {
-                        *x *= self.strategy[&node.information_set()][&action];
+                        *x *= *self.strategy.entry(node.information_set().clone()).or_insert(HashMap::new()).entry(action.clone()).or_insert(1f32 / node.actions.len() as f32);
                     }
                 }
-                // new_reach_probs[node.to_move as usize] *= self.strategy[&node.information_set()][&actions];
 
                 let child_cfr_utility = self.cfr_utility_rec(&node.children[&action], new_reach_probs);
                 values = values.iter().zip(child_cfr_utility.iter()).map(|(x, y)| x + y*self.strategy[&node.information_set()][&action]).collect();
