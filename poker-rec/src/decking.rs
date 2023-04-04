@@ -36,43 +36,31 @@ impl Deck {
         self.d.pop().unwrap()
     }
 
-    pub fn hardcode(&mut self, conf: &Decks) -> Deck {
-        let mut cardset: Vec<Card> = Vec::new();
+    pub fn hardcode(&mut self, conf: &Decks) {
+        let cardset: Vec<Card>;
 
         match conf {
             &Decks::QK => {
-                cardset.push(Card { val: 1 });
-                cardset.push(Card { val: 3 });
-                cardset.push(Card { val: 2 });
+                cardset = vec![Card { val: 2 }, Card { val: 3 }, Card { val: 1 }];
             }
             &Decks::JK => {
-                cardset.push(Card { val: 2 });
-                cardset.push(Card { val: 3 });
-                cardset.push(Card { val: 1 });
+                cardset = vec![Card { val: 1 }, Card { val: 3 }, Card { val: 2 }];
             }
             &Decks::JQ => {
-                cardset.push(Card { val: 3 });
-                cardset.push(Card { val: 2 });
-                cardset.push(Card { val: 1 });
+                cardset = vec![Card { val: 1 }, Card { val: 2 }, Card { val: 3 }];
             }
             &Decks::KQ => {
-                cardset.push(Card { val: 1 });
-                cardset.push(Card { val: 2 });
-                cardset.push(Card { val: 3 });
+                cardset = vec![Card { val: 3 }, Card { val: 2 }, Card { val: 1 }];
             }
             &Decks::KJ => {
-                cardset.push(Card { val: 2 });
-                cardset.push(Card { val: 1 });
-                cardset.push(Card { val: 3 });
+                cardset = vec![Card { val: 3 }, Card { val: 1 }, Card { val: 2 }];
             }
             &Decks::QJ => {
-                cardset.push(Card { val: 3 });
-                cardset.push(Card { val: 1 });
-                cardset.push(Card { val: 2 });
+                cardset = vec![Card { val: 2 }, Card { val: 1 }, Card { val: 3 }];
             }
         }
 
-        Deck { d: cardset }
+        self.d = cardset;
     }
 }
 

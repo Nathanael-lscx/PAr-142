@@ -131,18 +131,24 @@ impl Node {
     }
 }
 
+#[derive(Debug)]
 pub struct Root {
-    children: HashMap<Decks, Node>,
+    pub children: Vec<Node>,
 }
 
 impl Root {
     pub fn new() -> Root {
-        let mut mychildren = HashMap::new();
+        let mut mychildren = Vec::new();
 
         for mydeck in Decks::iter() {
             let mut mycards = Deck::new();
             mycards.hardcode(&mydeck);
-            mychildren.insert(mydeck, Node::new(0, Vec::new(), Vec::new(), mycards));
+            mychildren.push(Node::new(
+                0,
+                vec![ActionSpace::BET, ActionSpace::CHECK],
+                Vec::new(),
+                mycards,
+            ));
         }
 
         Root {
